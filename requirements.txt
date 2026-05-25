@@ -1,9 +1,12 @@
 ipykernel
-numpy==2.5.1
+ipywidgets
+numpy>=2.0,<2.4
 pandas==3.0.3
 matplotlib==3.11.0
 seaborn==0.13.2
-scikit-learn==1.9.0
 statsmodels==0.14.6
+scikit-learn==1.9.0
+lightgbm==4.7.0
+shap==0.52.0
 joblib==1.5.3
 streamlit==1.60.0

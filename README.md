@@ -34,12 +34,12 @@ This project tackles a complex regression problem by constructing a robust machi
 We evaluated the baseline and tuned candidate models across multiple metrics to analyze predictive accuracy and generalization performance.
 
 <p align="center">
-  <img src="plots/Model_Selection/02_final_model_comparison.png" alt="Figure 1: Comparison of RMSLE, MAE, and R2 scores" width="80%">
+  <img src="plots/Evaluation/02_final_model_comparison.png" alt="Figure 1: Comparison of RMSLE, MAE, and R2 scores" width="80%">
 </p>
 
 * **Best Model Performance:** **Tuned LightGBM** emerged as the clear champion, achieving the lowest Validation RMSLE of **0.2071**, the lowest Validation MAE of **\$5,092.09**, and the highest $R^2$ Score of **0.9205**.
 
-* **Impact of Hyperparameter Tuning:** Tuning significantly improved LightGBM's metrics compared to its baseline variant (which scored an RMSLE of 0.2874 and $R^2$ of 0.8469), outperforming both baseline and tuned stacking approaches while maintaining efficient execution time (**77.29s**).
+* **Impact of Hyperparameter Tuning:** Tuning significantly improved LightGBM's metrics compared to its baseline variant, outperforming both baseline and tuned stacking approaches.
 
 ### 2. Feature Importance & Model Interpretability
 
@@ -86,11 +86,12 @@ bulldozers-price-predictor/
 The execution pipeline automatically generates and manages the following runtime directories:
 
 ```text
-├── models/                             # Stores trained model files
-└── plots/                              # Generated visualizations
-    ├── EDA/                            # Exploratory Data Analysis plots
-    ├── Model_Selection/                # Hyperparameter tuning and Evaluation Metrics
-    └── Features/                       # Feature importance visualizations
+├── models/             # Stores trained model files
+└── plots/              # Generated visualizations
+    ├── EDA/            # Exploratory Data Analysis plots
+    ├── Tuning/         # Hyperparameter tuning and 
+    ├── Evaluation      # Evaluation Metrics
+    └── Features/       # Feature importance visualizations
 ```
 
 ---

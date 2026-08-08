@@ -27,7 +27,7 @@ Predicting the future sale price of heavy equipment (such as bulldozers) based o
 * **$R^2$ Score (Coefficient of Determination):** Evaluates the overall goodness of fit and the proportion of variance explained by the model.
 
 ### 1.4 Data Source
-* **Dataset:** Heavy Equipment / Bulldozers Auction Dataset (inspired by the classic Kaggle Blue Book for Bulldozers challenge). Comprises rich multi-attribute records including equipment models, usage metrics, and temporal sale timestamps.
+* **Dataset:** Obtained from the classic [Kaggle Blue Book for Bulldozers challenge](https://www.kaggle.com/competitions/bluebook-for-bulldozers/overview). Comprises rich multi-attribute records including equipment models, usage metrics, and temporal sale timestamps.
 
 ---
 
@@ -78,16 +78,40 @@ Predicting the future sale price of heavy equipment (such as bulldozers) based o
 
 ### 3.1 Model Formulation & Baseline Benchmarking
 * **Initial Estimator Selection:** Built baseline models to establish performance floors, focusing primarily on high-efficiency gradient boosting frameworks (LightGBM) capable of handling tabular categorical interactions and temporal splits efficiently.
-* **Baseline Comparison:** Evaluated `Baseline LightGBM` against a multi-estimator `Stacking (LGBM + Huber)` approach. While stacking yielded a marginal improvement in RMSLE (0.2867 vs 0.2874) and MAE (\$7,250.57 vs \$7,369.87), it incurred an extreme computational penalty, requiring **96.62s** of training time compared to just **1.11s** for the standalone baseline.
+* **Baseline Comparison:** Evaluated `Baseline LightGBM` against a multi-estimator `Stacking (LGBM + Ridge)` approach. While stacking yielded a marginal improvement in RMSLE (0.2867 vs 0.2874) and MAE (\$7,250.57 vs \$7,369.87), it incurred an extreme computational penalty, requiring **96.62s** of training time compared to just **1.11s** for the standalone baseline.
 
 #### Baseline Model Comparison
 <p align="center">
-  <img src="plots/Model_Selection/01_baseline_model_comparison.png" alt="Baseline Model Comparison" width="90%">
+  <img src="plots/Evaluation//01_baseline_model_comparison.png" alt="Baseline Model Comparison" width="90%">
 </p>
 
-### 3.2 Hyperparameter Optimization
-* **Systematic Tuning Strategy:** Deployed targeted hyperparameter optimization (including learning rates, tree depth, and number of estimators) to boost predictive accuracy without triggering overfitting on chronological validation boundaries.
-* **Efficiency vs. Accuracy Trade-off:** Tuning unlocked substantial performance gains for LightGBM, transforming it from a baseline estimator into the definitive champion model.
+### 3.2 Hyperparameter Optimization & Stacking Diagnostics
+
+To maximize predictive performance without inducing overfitting across chronological boundaries, a multi-phase optimization and ensembling strategy was executed.
+
+#### 3.2.1 Tuning LightGBM
+
+<p align="center">
+  <img src="plots/Tuning/01_lgbm_top_10_configurations.png" alt="Top 10 LightGBM Configurations" width="85%">
+</p>
+
+* **Targeted Hyperparameter Tuning:** Systematic search across model capacity (`num_leaves`, `max_depth`) and learning dynamics (`learning_rate`, `n_estimators`) substantially boosted performance. The top configuration achieved a validation RMSLE of **0.2415**, outperforming sub-optimal configurations (>0.28) and establishing tuned LightGBM as the champion standalone estimator.
+
+<p align="center">
+  <img src="plots/Tuning/02_lgb_tuning_sensitivity.png" alt="LightGBM Hyperparameter Sensitivity" width="85%">
+</p>
+
+* **Sensitivity Insights:** Optimization revealed that a learning rates of `0.1` combined with deeper trees (`max_depth = 8`, `num_leaves = 127`) and `n_estimators = 300` yielded the strongest generalization on the validation split.
+
+#### 3.2.2 Tuning Stacking Regressor
+
+<p align="center">
+  <img src="plots/Tuning/03_stacking_meta_model_weights.png" alt="Stacking Meta Model Weights" width="85%">
+  <img src="plots/Tuning/04_stacking_pred_correlation.png" alt="Base Models vs Stacking Predictions" width="85%">
+</p>
+
+* **Heterogeneous Ensembling:** Implemented a Stacking Regressor combining tree-based gradient boosting (`tuned_lgb`) and robust linear regression (`Ridge`) to evaluate potential multi-model synergy under storage constraints.
+* **Meta-Learner Diagnostics & Pruning:** Quantitative analysis of the meta-estimator (Ridge) coefficients showed **total dominance by LightGBM ($\omega$ ≈ 0.959)**, whereas **Ridge received negligible weight ( $\omega$ ≈ −0.001)**. Correlation diagnostics verified that **Ridge failed to resolve higher-order feature interactions**. Consequently, the ensemble was pruned to a **Standalone Tuned LightGBM**, preserving top-tier performance while optimizing computational efficiency.
 
 ---
 
@@ -97,13 +121,13 @@ Predicting the future sale price of heavy equipment (such as bulldozers) based o
 We benchmarked four distinct configurations across Validation RMSLE, Validation MAE, $R^2$ Score, and Execution/Tuning Time.
 
 <p align="center">
-  <img src="plots/Model_Selection/02_final_model_comparison.png" alt="Final Model Comparison" width="90%">
+  <img src="plots/Evaluation/02_final_model_comparison.png" alt="Final Model Comparison" width="90%">
 </p>
 
 ### 4.2 Key Evaluation Findings
 * **Champion Model:** **Tuned LightGBM** achieved the best overall performance across all accuracy metrics, securing the lowest Validation RMSLE (**0.2071**), the lowest Validation MAE (**\$5,092.09**), and the highest $R^2$ Score (**0.9205**).
-* **Tuned Stacking Performance:** The `Tuned Stacking` configuration performed strongly with an RMSLE of **0.2412**, an MAE of **\$6,017.42**, and an $R^2$ of **0.8922**, but required the longest runtime (**104.71s**).
-* **Cost-Benefit Conclusion:** Standalone **Tuned LightGBM** proved to be the optimal solution, outperforming complex stacked architectures while maintaining a faster and more efficient training time (**77.29s**).
+
+* **Tuned Stacking Performance:** The `Tuned Stacking` ensemble yielded solid overall predictive quality (RMSLE of **0.2422**, MAE of **\$6,037.12**, and $R^2$ of **0.8912**), ranking as the second-best performing configuration overall behind the standalone tuned LightGBM model. Additionally, while the training plot records an isolated execution time of **22.44s** for stacking, this figure is misleading in isolation: because the Level-1 LightGBM baseline required **79.78s** to tune separately beforehand, the true end-to-end computational pipeline cost for the stacking regressor sums to **102.22s** (79.78s + 22.44s).
 
 ---
 
@@ -133,13 +157,21 @@ We further utilized **SHAP Beeswarm Plots** to uncover both the magnitude and di
 
 ## 6. Conclusion
 
-### 6.1 Summary of Achievements
-This project successfully developed an end-to-end machine learning pipeline to forecast heavy machinery auction sales prices with high predictive accuracy. By implementing strict chronological data splitting, robust preprocessing architectures using Scikit-Learn `Pipeline`, and advanced feature engineering, we ensured the model reflects real-world market constraints without data leakage.
+### 6.1 Key Takeaways
 
-### 6.2 Key Takeaways & Impact
-* **Champion Model Superiority:** The **Tuned LightGBM** model emerged as the definitive solution, striking an ideal balance between accuracy and computational efficiency with a validation RMSLE of **0.2071**, a low MAE of **\$5,092.09**, and an $R^2$ score of **0.9205**.
-* **Model Interpretability:** Through comprehensive Permutation Importance and SHAP analysis, we demonstrated that equipment valuation is fundamentally driven by asset manufacturing year (`num__YearMade`) and physical scale (`cat__ProductSize`), alongside structural refinements like cabin enclosures.
-* **Interactive Web Application:** Encapsulating the trained pipeline into an interactive **Streamlit** dashboard bridges the gap between raw data science modeling and practical end-user deployment.
+* **Lightweight & High Performance:** The tuned LightGBM model yielded the strongest performance, achieving an RMSLE of 0.2071, an MAE of $5,092.09, and an $R^2$ of 0.9205. Beyond its predictive accuracy, its low computational overhead makes it ideal for real-time inference.
+
+* **Primary Valuation Drivers:** Model feature importance consistently highlighted equipment age (`YearMade`) and physical scale (`ProductSize`) as the main factors influencing price formation.
+
+* **Pipeline Integrity:** Utilizing Scikit-Learn `Pipeline` for data preprocessing and categorical encoding ensured strict separation between training and evaluation sets. Paired with time-based splitting, this structure prevented target leakage across all iterations.
+
+* **Production Deployment:** The final pipeline was integrated into a Streamlit web application, providing an accessible interface for generating real-time equipment valuations.
+
+### 6.2 Future Directions
+
+* **Refining the Stacking Ensemble:** Meta-model coefficient analysis reveals that the Stacking Regressor relies heavily on LightGBM (weight = 0.961), while assigning minimal weight to the Ridge baseline (weight = 0.047). Scatter comparisons further show that LGBM predictions align almost perfectly along the 1:1 agreement line, whereas Ridge displays significant variance. Future iterations should focus on incorporating Level-1 base models that offer stronger individual predictive power alongside structural diversity to yield meaningful ensembling gains.
+
+* **External Data Enrichment:** Incorporating supplementary datasets—such as macroeconomic indicators, regional location data, or unstructured inspection logs processed via NLP—could help capture market dynamics absent from the current features.
 
 ---
 

@@ -61,9 +61,9 @@ To understand the mechanics behind the Tuned LightGBM model, we utilized SHAP (S
 
 * **Language:** Python `3.12.11`
 * **Data Processing & Analysis:** Pandas, NumPy
-* **Machine Learning:** Scikit-Learn, lightgbm
+* **Machine Learning:** Scikit-Learn, LightGBM
 * **Visualization:** Matplotlib, Seaborn, statsmodels
-* **Model Interpretability :** shap
+* **Model Interpretability :** SHAP
 * **Model Persistence:** Joblib
 * **Web Framework:** Streamlit
 
@@ -89,8 +89,8 @@ The execution pipeline automatically generates and manages the following runtime
 ├── models/             # Stores trained model files
 └── plots/              # Generated visualizations
     ├── EDA/            # Exploratory Data Analysis plots
-    ├── Tuning/         # Hyperparameter tuning and 
-    ├── Evaluation      # Evaluation Metrics
+    ├── Tuning/         # Hyperparameter tuning visualizations
+    ├── Evaluation/     # Evaluation Metrics
     └── Features/       # Feature importance visualizations
 ```
 
@@ -158,7 +158,7 @@ uv venv
 source .venv/bin/activate
 ```
 
- 4. Install dependencies:
+4. Install dependencies:
 ```bash
 uv pip install --upgrade pip
 uv pip install -r requirements.txt
@@ -171,6 +171,13 @@ Once the dependencies are installed and the model artifacts are generated, launc
 ```bash
 streamlit run app.py
 ```
+
+**Note for macOS Users:** LightGBM requires libomp for parallel computing. If you encounter a libomp.dylib error when loading the model, install it via Homebrew:
+
+```bash
+brew install libomp
+````
+
 ---
 
 ## Acknowledgements
